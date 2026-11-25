@@ -84,6 +84,17 @@
   .legal{font-size:14px;color:var(--soft);margin:36px 0 0;line-height:1.5;border-top:1px solid rgba(255,255,255,.25);padding-top:18px}
   .hp{position:absolute;left:-9999px;width:1px;height:1px;opacity:0}
   .demo{background:var(--lime);color:var(--ink-dark);font-size:14px;padding:8px 12px;border-radius:10px;margin-bottom:16px}
+  .gl{font-size:15px;font-weight:600;color:var(--soft);margin:20px 0 4px}
+  .gf:first-child .gl{margin-top:0}
+  .group input{font-size:21px;min-height:52px;margin-bottom:2px}
+  .scn{font-size:18px;line-height:1.5;color:#fff;margin:0 0 14px}
+  .ask{font-size:18px;line-height:1.4;font-weight:700;color:#fff;margin:0 0 10px}
+  .gf.sep{margin-top:34px;padding-top:22px;border-top:1px solid rgba(255,255,255,.28)}
+  .gf.sep .gl{margin-top:0}
+  .opt.consent{background:transparent;border-color:transparent;padding:6px 0;min-height:0;align-items:flex-start;font-size:16px;line-height:1.45;color:var(--soft)}
+  .opt.consent.sel{background:transparent;border-color:transparent;color:#fff}
+  .opt.consent .k{margin-top:1px}
+  .opt.consent.sel .k{background:var(--lime);border-color:var(--lime);color:var(--ink-dark)}
   .end{text-align:left}
   .big{font-family:var(--serif);font-size:44px;line-height:1;color:var(--lime);margin-bottom:14px}
   .end h2{margin-bottom:18px}
@@ -111,25 +122,33 @@ const ENDPOINT = "https://script.google.com/macros/s/AKfycbwhKb32iF_UFzxVw0fGS4D
 const FECHA_CIERRE = "viernes 27/11";
 
 /* ===================== PREGUNTAS ===================== */
-const H1 = "Turno mañana: lunes a jueves 09:00 a 14:00, viernes 09:00 a 14:00";
-const H2 = "Turno tarde: lunes a jueves 14:00 a 19:00, viernes 09:00 a 14:00";
+const H1 = "Turno mañana: lunes a viernes, 09:00 a 14:00";
+const H2 = "Turno tarde: lunes a jueves, 14:00 a 19:00; viernes, 09:00 a 14:00";
 const H3 = "Puedo cualquiera de los dos";
 const H4 = "Ninguno de los dos";
 
 const STEPS = [
-  { id:"nombre", type:"text", title:"¿Cómo te llamas?", help:"Nombre y apellido.", req:true, auto:"name" },
-  { id:"correo", type:"email", title:"¿Cuál es tu correo?", help:"Por aquí te escribiremos si avanzas.", req:true, auto:"email" },
-  { id:"telefono", type:"tel", title:"¿Y tu teléfono?", help:"Con WhatsApp, si tienes.", req:true, auto:"tel" },
+  { id:"contacto", type:"group", title:"Empecemos por conocerte", help:"Así podremos contactarte si avanzas.", fields:[
+      { id:"nombre", type:"text", label:"Nombre y apellido", req:true, auto:"name" },
+      { id:"correo", type:"email", label:"Correo", req:true, auto:"email" },
+      { id:"telefono", type:"tel", label:"Teléfono (con WhatsApp, si tienes)", req:true, auto:"tel" } ] },
   { id:"horario", type:"choice", title:"¿Qué turno te acomoda?", help:"Elige una opción. Ambos turnos suman 25 horas semanales.", req:true, options:[H1,H2,H3,H4] },
-  { id:"estudia", type:"choice", title:"¿Estudias actualmente?", req:true, options:["Sí","No"] },
-  { id:"conflictos", type:"long", title:"¿Qué días y horarios tienes clases, exámenes o prácticas que se crucen con el turno que elegiste?", help:"Si no se cruza nada, escribe «ninguno».", req:true, showIf:a=>a.estudia==="Sí" },
+  { id:"conflictos", type:"long", title:"¿Tienes clases, exámenes, prácticas u otro compromiso fijo que se cruce con el turno que elegiste?", help:"Cuéntanos qué días y horarios. Si no tienes ninguno, escribe «ninguno».", req:true },
   { id:"prueba", type:"choice", title:"¿Puedes participar de una semana de prueba durante diciembre?", help:"La prueba es remunerada. Te avisaremos las fechas exactas si avanzas.", req:true, options:["Sí","No"] },
-  { id:"pretension", type:"money", title:"¿Cuál es tu pretensión de sueldo?", help:"Sueldo bruto mensual (antes de descuentos), en pesos, para las 25 horas semanales del turno que elegiste.\nEscribe solo números, por ejemplo 350000.", req:true },
+  { id:"inicio", type:"choice", title:"¿Desde cuándo podrías comenzar?", req:true, options:["Inmediatamente","En 1 a 2 semanas","En más de 2 semanas"] },
   { id:"proyeccion", type:"choice", title:"¿Cuánto tiempo te proyectas en este cargo?", req:true, options:["Menos de 6 meses","Entre 6 y 12 meses","Más de 1 año"] },
-  { id:"experiencia", type:"multi", title:"¿Qué de esto has hecho?", help:"Marca todo lo que aplique.", req:true, options:["Revelar película en casa","Ampliar o imprimir en cuarto oscuro","Escanear negativos","Trabajar en laboratorio, imprenta o tienda de fotografía","Ninguna de las anteriores"], exclusive:"Ninguna de las anteriores" },
-  { id:"procedimiento", type:"long", title:"Cuéntanos de un trabajo o actividad donde tuviste que seguir un procedimiento paso a paso con poco margen de error.", help:"¿Qué hacías para no equivocarte?", req:true, min:20 },
-  { id:"situacion", type:"long", title:"Estás haciendo una tarea y notas que algo se ve distinto de lo habitual. Nadie te explicó qué hacer en ese caso.", help:"¿Qué haces?", req:true, min:20 },
-  { id:"consentimiento", type:"consent", title:"Una última cosa", help:"Esto es opcional y no afecta tu postulación.", req:false, label:"Autorizo a Migo a guardar mis datos para futuros procesos de selección." }
+  { id:"experiencia_anios", type:"choice", title:"¿Cuántos años de experiencia laboral tienes?", help:"Considera cualquier trabajo, en cualquier rubro.", req:true, options:["Ninguna","Menos de 1 año","De 1 a 3 años","Más de 3 años"] },
+  { id:"lab", type:"choice", title:"¿Has trabajado en un laboratorio fotográfico, imprenta o proceso similar?", req:true, options:["Sí","No"] },
+  { id:"lab_detalle", type:"long", title:"¿Dónde, haciendo qué y por cuánto tiempo?", help:"Si además has revelado, impreso o escaneado por tu cuenta, cuéntalo también. Escribe al menos 2 líneas.", req:true, min:40, minMsg:"Cuéntanos un poco más, por favor: te pedimos al menos 2 líneas.", showIf:a=>a.lab==="Sí" },
+  { id:"herramientas", type:"multi", title:"¿Qué herramientas manejas?", help:"Marca todo lo que aplique.", req:true, options:["Windows","macOS","Photoshop","Lightroom","Excel o Google Sheets","Word o Google Docs","Software de escaneo","Ninguna de las anteriores"], exclusive:"Ninguna de las anteriores" },
+  { id:"portafolio", type:"url", title:"¿Tienes un CV o portafolio para compartirnos?", help:"Es opcional, pero tu postulación será más completa si lo incluyes. Pega aquí el link.\nSi es de Google Drive, déjalo en «Cualquier persona con el enlace».", req:false },
+  { id:"procedimiento", type:"long", title:"Cuéntanos de un trabajo o actividad donde tuviste que seguir un procedimiento paso a paso con poco margen de error.", help:"¿Qué hacías para no equivocarte? Escribe al menos 3 líneas.", req:true, min:120, minMsg:"Cuéntanos un poco más, por favor: te pedimos al menos 3 líneas." },
+  { id:"situacion", type:"long", title:"Un caso del día a día", intro:"Estás cerrando los pedidos del día y el número de orden de un sobre con negativos no coincide con el nombre de la bolsa del cliente. El cliente llega en minutos y quien te supervisa está en el cuarto oscuro y no puede salir.", ask:"¿Qué haces, paso a paso, antes de que llegue?", help:"Escribe al menos 3 líneas.", req:true, min:120, minMsg:"Cuéntanos un poco más, por favor: te pedimos al menos 3 líneas." },
+  { id:"motivacion", type:"long", title:"¿Qué te atrae de trabajar en un laboratorio de fotografía análoga?", help:"Cuéntanos en unas 2 líneas.", req:true, min:80, minMsg:"Cuéntanos un poco más, por favor: te pedimos al menos 2 líneas." },
+  { id:"pretension", type:"money", title:"¿Cuánto esperas recibir cada mes?", help:"Es el monto que te depositarían en tu cuenta por las 25 horas semanales.\nEscribe solo el monto en pesos, sin puntos ni texto.", req:true },
+  { id:"final", type:"group", title:"Una última cosa", help:"Estas dos preguntas son opcionales y no afectan tu postulación.", fields:[
+      { id:"conocio", type:"choice", label:"¿Cómo te enteraste de esta convocatoria?", req:false, options:["Instagram de Migo","Un conocido o alguien del equipo","Una tienda Migo","Otro"] },
+      { id:"consentimiento", type:"consent", req:false, heading:"Sobre tus datos (opcional)", label:"Autorizo a Migo a guardar mis datos para futuros procesos de selección." } ] }
 ];
 
 /* ===================== ESTADO ===================== */
@@ -183,84 +202,121 @@ function goTo(i){
   window.scrollTo(0,0);
 }
 
+const fieldsOf = s => s.type==="group" ? s.fields : [s];
+const isText = t => t==="text"||t==="email"||t==="tel"||t==="url"||t==="money"||t==="long";
+
+function fieldHTML(f,grouped){
+  const val=ans[f.id];
+  const label = grouped && f.label && f.type!=="consent" ? (isText(f.type)?`<label class="gl" for="f_${f.id}">${esc(f.label)}</label>`:`<div class="gl">${esc(f.label)}</div>`) : "";
+  let body="";
+  if(f.type==="text"||f.type==="email"||f.type==="tel"){
+    body=`<input id="f_${f.id}" type="${f.type}" value="${esc(val||"")}" autocomplete="${f.auto||"off"}" ${f.type==="tel"?'inputmode="tel"':''} ${f.type==="email"?'inputmode="email" autocapitalize="off"':''}>`;
+  } else if(f.type==="url"){
+    body=`<input id="f_${f.id}" type="text" inputmode="url" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="https://" value="${esc(val||"")}" autocomplete="off">`;
+  } else if(f.type==="money"){
+    body=`<input id="f_${f.id}" type="text" inputmode="numeric" pattern="[0-9]*" placeholder="Monto en pesos" value="${esc(val||"")}" autocomplete="off">`;
+  } else if(f.type==="long"){
+    body=`<textarea id="f_${f.id}" autocomplete="off">${esc(val||"")}</textarea>`;
+  } else if(f.type==="choice"||f.type==="multi"){
+    const sel=new Set(Array.isArray(val)?val:val?[val]:[]);
+    body=`<div class="opts" id="o_${f.id}">`+f.options.map((o,k)=>`<button type="button" class="opt ${sel.has(o)?"sel":""}" data-o="${esc(o)}"><span class="k">${f.type==="multi"?(sel.has(o)?"✓":""):String.fromCharCode(65+k)}</span><span>${esc(o)}</span></button>`).join("")+`</div>`;
+  } else if(f.type==="consent"){
+    const on=!!val;
+    body=`<button type="button" class="opt consent ${on?"sel":""}" id="c_${f.id}"><span class="k">${on?"✓":""}</span><span>${esc(f.label)}</span></button>`;
+    if(f.heading) return `<div class="gf sep"><div class="gl">${esc(f.heading)}</div>${body}</div>`;
+  }
+  return `<div class="gf">${label}${body}</div>`;
+}
+
 function renderStep(s){
   const v=visible(), n=v.indexOf(s)+1;
-  let body="";
-  const val=ans[s.id];
-  if(s.type==="text"||s.type==="email"||s.type==="tel"){
-    body=`<input id="f" type="${s.type}" value="${esc(val||"")}" autocomplete="${s.auto||"off"}" ${s.type==="tel"?'inputmode="tel"':''} ${s.type==="email"?'inputmode="email" autocapitalize="off"':''}>`;
-  } else if(s.type==="money"){
-    body=`<input id="f" type="text" inputmode="numeric" pattern="[0-9]*" placeholder="350000" value="${esc(val||"")}" autocomplete="off">`;
-  } else if(s.type==="long"){
-    body=`<textarea id="f" autocomplete="off">${esc(val||"")}</textarea>`;
-  } else if(s.type==="choice"||s.type==="multi"){
-    const sel=new Set(Array.isArray(val)?val:val?[val]:[]);
-    body=s.options.map((o,k)=>`<button type="button" class="opt ${sel.has(o)?"sel":""}" data-o="${esc(o)}"><span class="k">${s.type==="multi"?(sel.has(o)?"✓":""):String.fromCharCode(65+k)}</span><span>${esc(o)}</span></button>`).join("");
-  } else if(s.type==="consent"){
-    const on=!!val;
-    body=`<button type="button" class="opt ${on?"sel":""}" id="c"><span class="k">${on?"✓":""}</span><span>${esc(s.label)}</span></button>`;
-  }
+  const grouped = s.type==="group";
+  const fs = fieldsOf(s);
   const last = nextVisible(idx,1)>=STEPS.length;
-  const needsButton = !(s.type==="choice");
-  main.innerHTML=`<div class="step">
+  const autoAdvance = s.type==="choice";
+  const needsButton = !autoAdvance;
+  main.innerHTML=`<div class="step ${grouped?"group":""}">
     <div class="num">${n} / ${v.length}</div>
     <h2>${esc(s.title)}</h2>
+    ${s.intro?`<p class="scn">${esc(s.intro)}</p>`:""}
+    ${s.ask?`<p class="ask">${esc(s.ask)}</p>`:""}
     ${s.help?`<p class="help">${esc(s.help)}</p>`:""}
     <input class="hp" id="hp" tabindex="-1" autocomplete="off" aria-hidden="true" name="sitio_web">
-    ${body}
+    ${fs.map(f=>fieldHTML(f,grouped)).join("")}
     <div class="err" id="err" role="alert"></div>
     <div class="nav">
       <button class="ghost" id="back" type="button">Atrás</button>
       ${needsButton?`<button class="primary" id="next" type="button">${last?"Enviar postulación":"Siguiente"}</button>`:""}
-      ${s.type==="long"?"":`<span class="hint">${needsButton&&s.type!=="multi"?"Enter ↵":""}</span>`}
+      ${s.type==="long"||grouped?"":`<span class="hint">${needsButton&&s.type!=="multi"?"Enter ↵":""}</span>`}
     </div>
   </div>`;
   $("#back").onclick=()=>goTo(nextVisible(idx,-1));
-  const f=$("#f");
-  if(f&&s.type!=="long"){ f.addEventListener("keydown",e=>{ if(e.key==="Enter"){e.preventDefault();advance();} }); }
-  if(f&&matchMedia("(pointer:fine)").matches) f.focus();
-  if(s.type==="choice"){
-    main.querySelectorAll(".opt").forEach(b=>b.onclick=()=>{ ans[s.id]=b.dataset.o; main.querySelectorAll(".opt").forEach(x=>x.classList.toggle("sel",x===b)); setTimeout(advance,180); });
-  }
-  if(s.type==="multi"){
-    main.querySelectorAll(".opt").forEach(b=>b.onclick=()=>{
-      let cur=new Set(Array.isArray(ans[s.id])?ans[s.id]:[]); const o=b.dataset.o;
-      if(cur.has(o)) cur.delete(o);
-      else { if(o===s.exclusive) cur=new Set([o]); else { cur.delete(s.exclusive); cur.add(o); } }
-      ans[s.id]=[...cur];
-      main.querySelectorAll(".opt").forEach(x=>{const on=cur.has(x.dataset.o); x.classList.toggle("sel",on); x.querySelector(".k").textContent=on?"✓":"";});
-    });
-  }
-  if(s.type==="consent"){
-    $("#c").onclick=()=>{ ans[s.id]=!ans[s.id]; const on=ans[s.id]; $("#c").classList.toggle("sel",on); $("#c .k").textContent=on?"✓":""; };
-  }
+  const inputs=fs.filter(f=>isText(f.type)&&f.type!=="long").map(f=>$("#f_"+f.id));
+  inputs.forEach((el,i)=>el.addEventListener("keydown",e=>{
+    if(e.key==="Enter"){ e.preventDefault(); if(inputs[i+1]) inputs[i+1].focus(); else advance(); }
+  }));
+  fs.filter(f=>f.type==="money").forEach(f=>{ const el=$("#f_"+f.id); el.addEventListener("input",()=>{ const c=el.value.replace(/\D/g,""); if(c!==el.value) el.value=c; }); });
+  const first=fs.length&&isText(fs[0].type)?$("#f_"+fs[0].id):null;
+  if(first&&matchMedia("(pointer:fine)").matches) first.focus();
+  fs.forEach(f=>{
+    if(f.type==="choice"){
+      const box=$("#o_"+f.id);
+      box.querySelectorAll(".opt").forEach(b=>b.onclick=()=>{
+        ans[f.id]=b.dataset.o; box.querySelectorAll(".opt").forEach(x=>x.classList.toggle("sel",x===b));
+        if(autoAdvance) setTimeout(advance,180);
+      });
+    }
+    if(f.type==="multi"){
+      const box=$("#o_"+f.id);
+      box.querySelectorAll(".opt").forEach(b=>b.onclick=()=>{
+        let cur=new Set(Array.isArray(ans[f.id])?ans[f.id]:[]); const o=b.dataset.o;
+        if(cur.has(o)) cur.delete(o);
+        else { if(o===f.exclusive) cur=new Set([o]); else { cur.delete(f.exclusive); cur.add(o); } }
+        ans[f.id]=[...cur];
+        box.querySelectorAll(".opt").forEach(x=>{const on=cur.has(x.dataset.o); x.classList.toggle("sel",on); x.querySelector(".k").textContent=on?"✓":"";});
+      });
+    }
+    if(f.type==="consent"){
+      const c=$("#c_"+f.id);
+      c.onclick=()=>{ ans[f.id]=!ans[f.id]; const on=ans[f.id]; c.classList.toggle("sel",on); c.querySelector(".k").textContent=on?"✓":""; };
+    }
+  });
   const nb=$("#next"); if(nb) nb.onclick=advance;
 }
 
 function collect(s){
   const h=$("#hp"); if(h&&h.value) honeypot=h.value;
-  const f=$("#f"); if(!f) return;
-  ans[s.id]=f.value.trim();
+  fieldsOf(s).forEach(f=>{
+    if(!isText(f.type)) return;
+    const el=$("#f_"+f.id); if(el) ans[f.id]=el.value.trim();
+  });
 }
-function validate(s){
-  const v=ans[s.id];
-  const empty = v===undefined||v===""||(Array.isArray(v)&&!v.length);
-  if(s.req&&empty) return s.type==="choice"||s.type==="multi"?"Elige una opción para continuar.":"Esta respuesta es obligatoria.";
+function validate(f){
+  const v=ans[f.id];
+  const empty = v===undefined||v===""||v===false||(Array.isArray(v)&&!v.length);
+  if(f.req&&empty) return f.type==="choice"||f.type==="multi"?"Elige una opción para continuar.":"Esta respuesta es obligatoria.";
   if(empty) return "";
-  if(s.type==="email"&&!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v)) return "Revisa tu correo, parece incompleto.";
-  if(s.type==="tel"){ const d=v.replace(/\D/g,""); if(d.length<8||d.length>13) return "Revisa tu teléfono, parece incompleto."; }
-  if(s.type==="money"){
-    const d=v.replace(/[.\s$]/g,""); if(!/^\d+$/.test(d)) return "Escribe solo números, por ejemplo 350000.";
-    const n=+d; if(n<50000||n>5000000) return "Revisa el monto. Debe ser un sueldo mensual en pesos, por ejemplo 350000.";
-    ans[s.id]=String(n);
+  if(f.type==="email"&&!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v)) return "Revisa tu correo, parece incompleto.";
+  if(f.type==="tel"){ const d=v.replace(/\D/g,""); if(d.length<8||d.length>13) return "Revisa tu teléfono, parece incompleto."; }
+  if(f.type==="url"){
+    if(!/^(https?:\/\/)?[^\s\/.]+\.[^\s]{2,}$/i.test(v)) return "Revisa el link, parece incompleto.";
+    ans[f.id]=/^https?:\/\//i.test(v)?v:"https://"+v;
   }
-  if(s.min&&v.length<s.min) return "Cuéntanos un poco más, por favor.";
+  if(f.type==="money"){
+    const d=v.replace(/[.\s$]/g,""); if(!/^\d+$/.test(d)) return "Escribe solo números.";
+    const n=+d; if(n<50000||n>5000000) return "Revisa el monto. Debe ser un monto mensual en pesos.";
+    ans[f.id]=String(n);
+  }
+  if(f.min&&v.length<f.min) return f.minMsg||"Cuéntanos un poco más, por favor.";
   return "";
 }
 function advance(){
   const s=STEPS[idx]; collect(s);
-  const e=validate(s); if(e){ $("#err").textContent=e; return; }
-  // Filtro duro: sin horario posible no hay cargo. No se envía nada.
+  for(const f of fieldsOf(s)){
+    const e=validate(f);
+    if(e){ $("#err").textContent=e; const el=$("#f_"+f.id); if(el) el.focus(); return; }
+  }
+  // Filtro duro: sin turno posible no hay cargo. No se envía nada.
   if(s.id==="horario"&&ans.horario===H4){ return showEnd("closed"); }
   goTo(nextVisible(idx,1));
 }
@@ -270,7 +326,7 @@ async function submit(){
   bar.hidden=false; fill.style.width="96%";
   main.innerHTML=`<div class="step end"><h2>Enviando tu postulación…</h2><p class="help">No cierres esta página.</p></div>`;
   const payload={...ans, web:honeypot, segundos:Math.round((Date.now()-t0)/1000), id:crypto.randomUUID?crypto.randomUUID():String(Date.now())+Math.random()};
-  if(Array.isArray(payload.experiencia)) payload.experiencia=payload.experiencia.join("; ");
+  Object.keys(payload).forEach(k=>{ if(Array.isArray(payload[k])) payload[k]=payload[k].join("; "); });
   payload.consentimiento=ans.consentimiento?"Sí":"No";
   try{
     if(!ENDPOINT){ console.log("MODO PRUEBA, payload:",payload); await new Promise(r=>setTimeout(r,700)); return showEnd("ok"); }
