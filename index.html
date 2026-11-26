@@ -119,7 +119,7 @@ const LOGO = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAggAAAGgCAYAAADPW599
 document.getElementById("logo").src = LOGO;
 // URL de la aplicación web de Apps Script (termina en /exec). Si queda vacía, la página funciona en MODO PRUEBA y no guarda nada.
 const ENDPOINT = "https://script.google.com/macros/s/AKfycbwhKb32iF_UFzxVw0fGS4DPtnCyUYgVCZreEv2wjCTcoWk3FJitX7jJtiyW14-RmHRrGw/exec";
-const FECHA_CIERRE = "viernes 27/11";
+const PLAZO_TXT = "domingo 29/11 a las 23:59 hrs"; // texto de respaldo: el real viene de la hoja «Reglas» del script
 
 /* ===================== PREGUNTAS ===================== */
 const H1 = "Turno mañana: lunes a viernes, 09:00 a 14:00";
@@ -182,7 +182,7 @@ function showIntro(){
     </div>
     <h3>¿Cómo es el proceso?</h3>
     <ol class="steps"><li>Completas este formulario.</li><li>Si tu perfil calza, te llamamos a una entrevista.</li><li>Realizas una semana de prueba remunerada en el laboratorio.</li></ol>
-    <div class="plazo"><strong>Plazo:</strong> Recibiremos postulaciones hasta el <strong>${FECHA_CIERRE} a las 23:59 hrs</strong>. Nos pondremos en contacto únicamente con quienes avancen a la siguiente etapa.</div>
+    <div class="plazo"><strong>Plazo:</strong> Recibiremos postulaciones hasta el <strong id="plazoTxt">${PLAZO_TXT}</strong>. Nos pondremos en contacto únicamente con quienes avancen a la siguiente etapa.</div>
     <p class="c mucho"><strong>¡Mucho éxito!</strong></p>
     <div class="nav"><button class="primary" id="go">Comenzar</button></div>
     <p class="legal">Al presionar «Comenzar», aceptas que Migo guarde y use los datos que ingreses solo para evaluar tu postulación y contactarte durante este proceso de selección.</p>
@@ -332,6 +332,7 @@ async function submit(){
     if(!ENDPOINT){ console.log("MODO PRUEBA, payload:",payload); await new Promise(r=>setTimeout(r,700)); return showEnd("ok"); }
     const r=await fetch(ENDPOINT,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(payload),redirect:"follow"});
     const j=await r.json();
+    if(j&&j.cerrado) return showEnd("cerrado");
     if(j&&j.ok) return showEnd("ok");
     throw new Error((j&&j.error)||"respuesta inesperada");
   }catch(err){
@@ -349,12 +350,42 @@ function showEnd(kind){
     main.innerHTML=`<div class="step end"><img class="logo-big" src="${LOGO}" alt="Migo Fotografía"><div class="big">✓</div><h2>Recibimos tu postulación. ¡Gracias!</h2>
       <p class="next">Una vez cerrado el proceso de postulación nos pondremos en contacto solo con quienes avancen a la entrevista.</p>
       <p class="nota">No es necesario que nos escribas por correo o redes una vez completada tu postulación.</p></div>`;
+  } else if(kind==="cerrado"){
+    main.innerHTML=`<div class="step end"><img class="logo-big" src="${LOGO}" alt="Migo Fotografía"><h2>Las postulaciones ya cerraron</h2>
+      <p class="next">Gracias por tu interés en trabajar en Migo. Ya no estamos recibiendo postulaciones para esta convocatoria.</p>
+      <p class="nota">Si estabas completando el formulario, lamentamos que no alcanzara a enviarse. Si abrimos una nueva convocatoria, la anunciaremos en nuestro Instagram.</p></div>`;
   } else {
     main.innerHTML=`<div class="step end"><h2>Gracias por tu interés</h2>
       <p>Por ahora el cargo es solo en esos turnos, así que no podemos continuar con tu postulación. Si más adelante abrimos otros horarios, estaremos atentos.</p></div>`;
   }
 }
-showIntro();
+/* ===================== APERTURA / CIERRE ===================== */
+function textoCierre(iso){
+  const d=new Date(iso); if(isNaN(d)) return null;
+  const p={}; new Intl.DateTimeFormat("es-CL",{timeZone:"America/Santiago",weekday:"long",day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit",hourCycle:"h23"}).formatToParts(d).forEach(x=>p[x.type]=x.value);
+  return `${p.weekday} ${p.day}/${p.month} a las ${p.hour}:${p.minute} hrs`;
+}
+async function consultarEstado(){
+  if(!ENDPOINT) return null;
+  const ctl=new AbortController(), t=setTimeout(()=>ctl.abort(),6000);
+  try{
+    const r=await fetch(ENDPOINT+"?estado=1",{cache:"no-store",signal:ctl.signal});
+    const j=await r.json(); return j&&j.ok?j:null;
+  }catch(e){ return null; } finally { clearTimeout(t); }
+}
+function aplicarEstado(j){
+  if(!j||!document.getElementById("go")) return;       // solo si la persona sigue en la portada
+  if(j.cerrado) return showEnd("cerrado");
+  const t=j.cierre&&textoCierre(j.cierre), el=document.getElementById("plazoTxt");
+  if(el&&t) el.textContent=t;
+}
+(async function iniciar(){
+  const estado=consultarEstado();
+  const r=await Promise.race([estado,new Promise(ok=>setTimeout(()=>ok("lento"),1500))]);
+  if(r==="lento"){ showIntro(); estado.then(aplicarEstado); }       // si el script demora, se muestra la portada igual
+  else if(r&&r.cerrado){ showEnd("cerrado"); }
+  else { showIntro(); aplicarEstado(r); }
+})();
 </script>
 </body>
 </html>
