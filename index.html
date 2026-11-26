@@ -34,7 +34,7 @@
   h1.c{font-size:32px;margin-bottom:10px}
   .lead{font-family:var(--serif);font-size:20px;color:var(--lime);margin:0 0 22px}
   .intro{font-size:16.5px}
-  .intro h3{font-family:var(--serif);font-size:20px;margin:26px 0 12px;color:#fff}
+  .intro h3{font-family:var(--serif);font-size:20px;margin:26px 0 12px;color:#fff;text-align:center}
   .cargo{background:var(--fill);border:2px solid var(--line);border-radius:var(--radius);padding:18px 18px 8px;margin-bottom:12px}
   .cargo-head{padding-bottom:14px;border-bottom:1px solid rgba(255,255,255,.25)}
   .cargo-head strong{display:block;font-family:var(--serif);font-size:22px;line-height:1.15;margin-bottom:6px}
@@ -70,6 +70,9 @@
   .opt{display:flex;align-items:center;gap:14px;width:100%;text-align:left;font:inherit;color:#fff;background:var(--fill);
     border:2px solid var(--line);border-radius:var(--radius);padding:14px 16px;min-height:58px;margin-bottom:12px;cursor:pointer;transition:background .15s,border-color .15s}
   .opt:focus-visible{outline:3px solid var(--lime);outline-offset:2px}
+  .opt .ot b{display:block;font-size:16px;line-height:1.3}
+  .opt .ot small{display:block;white-space:pre-line;font-size:14.5px;line-height:1.35;margin-top:2px;opacity:.9}
+  .uni .opt{height:96px}
   .opt .k{flex:none;width:30px;height:30px;border:2px solid var(--line);border-radius:8px;display:grid;place-items:center;font-size:14px;font-weight:700;color:var(--soft)}
   .opt.sel{background:var(--lime);border-color:var(--lime);color:var(--ink-dark)}
   .opt.sel .k{background:var(--ink-dark);border-color:var(--ink-dark);color:var(--lime)}
@@ -86,6 +89,7 @@
   .demo{background:var(--lime);color:var(--ink-dark);font-size:14px;padding:8px 12px;border-radius:10px;margin-bottom:16px}
   .gl{font-size:15px;font-weight:600;color:var(--soft);margin:20px 0 4px}
   .gf:first-child .gl{margin-top:0}
+  .group .gl + .opts{margin-top:12px}
   .group input{font-size:21px;min-height:52px;margin-bottom:2px}
   .scn{font-size:18px;line-height:1.5;color:#fff;margin:0 0 14px}
   .ask{font-size:18px;line-height:1.4;font-weight:700;color:#fff;margin:0 0 10px}
@@ -124,15 +128,17 @@ const PLAZO_TXT = "domingo 29/11 a las 23:59 hrs"; // texto de respaldo: el real
 /* ===================== PREGUNTAS ===================== */
 const H1 = "Turno mañana: lunes a viernes, 09:00 a 14:00";
 const H2 = "Turno tarde: lunes a jueves, 14:00 a 19:00; viernes, 09:00 a 14:00";
-const H3 = "Puedo cualquiera de los dos";
+const H3 = "Cualquiera de los dos";
 const H4 = "Ninguno de los dos";
+// Cómo se ven los turnos en pantalla (lo que se guarda en la planilla sigue siendo H1..H4)
+const LBL = { [H1]:["Turno mañana","Lun a vie, 09:00 a 14:00"], [H2]:["Turno tarde","Lun a jue, 14:00 a 19:00\nVie, 09:00 a 14:00"] };
 
 const STEPS = [
   { id:"contacto", type:"group", title:"Empecemos por conocerte", help:"Así podremos contactarte si avanzas.", fields:[
       { id:"nombre", type:"text", label:"Nombre y apellido", req:true, auto:"name" },
       { id:"correo", type:"email", label:"Correo", req:true, auto:"email" },
       { id:"telefono", type:"tel", label:"Teléfono (con WhatsApp, si tienes)", req:true, auto:"tel" } ] },
-  { id:"horario", type:"choice", title:"¿Qué turno te acomoda?", help:"Elige una opción. Ambos turnos suman 25 horas semanales.", req:true, options:[H1,H2,H3,H4] },
+  { id:"horario", type:"choice", title:"¿Qué turno te acomoda?", help:"Elige una opción. Ambos turnos suman 25 horas semanales.", req:true, uni:true, options:[H1,H2,H3,H4] },
   { id:"conflictos", type:"long", title:"¿Tienes clases, exámenes, prácticas u otro compromiso fijo que se cruce con el turno que elegiste?", help:"Cuéntanos qué días y horarios. Si no tienes ninguno, escribe «ninguno».", req:true },
   { id:"prueba", type:"choice", title:"¿Puedes participar de una semana de prueba durante diciembre?", help:"La prueba es remunerada. Te avisaremos las fechas exactas si avanzas.", req:true, options:["Sí","No"] },
   { id:"inicio", type:"choice", title:"¿Desde cuándo podrías comenzar?", req:true, options:["Inmediatamente","En 1 a 2 semanas","En más de 2 semanas"] },
@@ -141,11 +147,11 @@ const STEPS = [
   { id:"lab", type:"choice", title:"¿Has trabajado en un laboratorio fotográfico, imprenta o proceso similar?", req:true, options:["Sí","No"] },
   { id:"lab_detalle", type:"long", title:"¿Dónde, haciendo qué y por cuánto tiempo?", help:"Si además has revelado, impreso o escaneado por tu cuenta, cuéntalo también. Escribe al menos 2 líneas.", req:true, min:40, minMsg:"Cuéntanos un poco más, por favor: te pedimos al menos 2 líneas.", showIf:a=>a.lab==="Sí" },
   { id:"herramientas", type:"multi", title:"¿Qué herramientas manejas?", help:"Marca todo lo que aplique.", req:true, options:["Windows","macOS","Photoshop","Lightroom","Excel o Google Sheets","Word o Google Docs","Software de escaneo","Ninguna de las anteriores"], exclusive:"Ninguna de las anteriores" },
-  { id:"portafolio", type:"url", title:"¿Tienes un CV o portafolio para compartirnos?", help:"Es opcional, pero tu postulación será más completa si lo incluyes. Pega aquí el link.\nSi es de Google Drive, déjalo en «Cualquier persona con el enlace».", req:false },
+  { id:"portafolio", type:"url", title:"¿Tienes un CV o portafolio para compartirnos?", help:"Es opcional, pero tu postulación será más completa si lo incluyes. Pega aquí el link.\nSi es de Google Drive, deja su acceso general en «Cualquier persona con el enlace».", req:false },
   { id:"procedimiento", type:"long", title:"Cuéntanos de un trabajo o actividad donde tuviste que seguir un procedimiento paso a paso con poco margen de error.", help:"¿Qué hacías para no equivocarte? Escribe al menos 3 líneas.", req:true, min:120, minMsg:"Cuéntanos un poco más, por favor: te pedimos al menos 3 líneas." },
   { id:"situacion", type:"long", title:"Un caso del día a día", intro:"Estás cerrando los pedidos del día y el número de orden de un sobre con negativos no coincide con el nombre de la bolsa del cliente. El cliente llega en minutos y quien te supervisa está en el cuarto oscuro y no puede salir.", ask:"¿Qué haces, paso a paso, antes de que llegue?", help:"Escribe al menos 3 líneas.", req:true, min:120, minMsg:"Cuéntanos un poco más, por favor: te pedimos al menos 3 líneas." },
-  { id:"motivacion", type:"long", title:"¿Qué te atrae de trabajar en un laboratorio de fotografía análoga?", help:"Cuéntanos en unas 2 líneas.", req:true, min:80, minMsg:"Cuéntanos un poco más, por favor: te pedimos al menos 2 líneas." },
-  { id:"pretension", type:"money", title:"¿Cuánto esperas recibir cada mes?", help:"Es el monto que te depositarían en tu cuenta por las 25 horas semanales.\nEscribe solo el monto en pesos, sin puntos ni texto.", req:true },
+  { id:"motivacion", type:"long", title:"¿Qué te atrae de trabajar en el laboratorio análogo de Migo?", help:"Cuéntanos en unas 2 líneas.", req:true, min:80, minMsg:"Cuéntanos un poco más, por favor: te pedimos al menos 2 líneas." },
+  { id:"pretension", type:"money", title:"¿Cuál es tu pretensión de sueldo líquido mensual?", help:"Escribe solo el monto en pesos, sin puntos ni texto.", req:true },
   { id:"final", type:"group", title:"Una última cosa", help:"Estas dos preguntas son opcionales y no afectan tu postulación.", fields:[
       { id:"conocio", type:"choice", label:"¿Cómo te enteraste de esta convocatoria?", req:false, options:["Instagram de Migo","Un conocido o alguien del equipo","Una tienda Migo","Otro"] },
       { id:"consentimiento", type:"consent", req:false, heading:"Sobre tus datos (opcional)", label:"Autorizo a Migo a guardar mis datos para futuros procesos de selección." } ] }
@@ -219,7 +225,7 @@ function fieldHTML(f,grouped){
     body=`<textarea id="f_${f.id}" autocomplete="off">${esc(val||"")}</textarea>`;
   } else if(f.type==="choice"||f.type==="multi"){
     const sel=new Set(Array.isArray(val)?val:val?[val]:[]);
-    body=`<div class="opts" id="o_${f.id}">`+f.options.map((o,k)=>`<button type="button" class="opt ${sel.has(o)?"sel":""}" data-o="${esc(o)}"><span class="k">${f.type==="multi"?(sel.has(o)?"✓":""):String.fromCharCode(65+k)}</span><span>${esc(o)}</span></button>`).join("")+`</div>`;
+    body=`<div class="opts ${f.uni?"uni":""}" id="o_${f.id}">`+f.options.map((o,k)=>`<button type="button" class="opt ${sel.has(o)?"sel":""}" data-o="${esc(o)}"><span class="k">${f.type==="multi"?(sel.has(o)?"✓":""):String.fromCharCode(65+k)}</span>${LBL[o]?`<span class="ot"><b>${esc(LBL[o][0])}</b><small>${esc(LBL[o][1])}</small></span>`:`<span>${esc(o)}</span>`}</button>`).join("")+`</div>`;
   } else if(f.type==="consent"){
     const on=!!val;
     body=`<button type="button" class="opt consent ${on?"sel":""}" id="c_${f.id}"><span class="k">${on?"✓":""}</span><span>${esc(f.label)}</span></button>`;
